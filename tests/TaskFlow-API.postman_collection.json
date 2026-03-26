@@ -1,0 +1,354 @@
+{
+  "info": {
+    "name": "TaskFlow Lite API",
+    "description": "Complete test suite for the TaskFlow Lite RESTful API. Import into Postman or Thunder Client.",
+    "version": "1.0.0",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:3000", "type": "string" },
+    { "key": "taskId", "value": "", "type": "string" }
+  ],
+  "item": [
+    {
+      "name": "🏥 Health",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/health", "host": ["{{baseUrl}}"], "path": ["api", "health"] }
+          },
+          "event": [{
+            "listen": "test",
+            "script": {
+              "exec": [
+                "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                "pm.test('Success flag', () => pm.expect(pm.response.json().success).to.be.true);",
+                "pm.test('Has uptime', () => pm.expect(pm.response.json().data).to.have.property('uptime'));"
+              ]
+            }
+          }]
+        }
+      ]
+    },
+    {
+      "name": "📋 Tasks",
+      "item": [
+        {
+          "name": "List All Tasks",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/tasks", "host": ["{{baseUrl}}"], "path": ["api", "tasks"] }
+          },
+          "event": [{
+            "listen": "test",
+            "script": {
+              "exec": [
+                "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                "pm.test('Data is array', () => pm.expect(pm.response.json().data).to.be.an('array'));",
+                "pm.test('Has meta count', () => pm.expect(pm.response.json().meta).to.have.property('count'));"
+              ]
+            }
+          }]
+        },
+        {
+          "name": "List Tasks - Filter by Status (todo)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/tasks?status=todo",
+              "host": ["{{baseUrl}}"], "path": ["api", "tasks"],
+              "query": [{ "key": "status", "value": "todo" }]
+            }
+          },
+          "event": [{
+            "listen": "test",
+            "script": {
+              "exec": [
+                "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                "pm.test('All tasks are todo', () => {",
+                "  pm.response.json().data.forEach(t => pm.expect(t.status).to.equal('todo'));",
+                "});"
+              ]
+            }
+          }]
+        },
+        {
+          "name": "List Tasks - Filter by Priority (high)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/tasks?priority=high",
+              "host": ["{{baseUrl}}"], "path": ["api", "tasks"],
+              "query": [{ "key": "priority", "value": "high" }]
+            }
+          }
+        },
+        {
+          "name": "List Tasks - Search",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/tasks?search=design",
+              "host": ["{{baseUrl}}"], "path": ["api", "tasks"],
+              "query": [{ "key": "search", "value": "design" }]
+            }
+          }
+        },
+        {
+          "name": "List Tasks - Sort by Priority Asc",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/tasks?sortBy=createdAt&order=asc",
+              "host": ["{{baseUrl}}"], "path": ["api", "tasks"],
+              "query": [{ "key": "sortBy", "value": "createdAt" }, { "key": "order", "value": "asc" }]
+            }
+          }
+        },
+        {
+          "name": "List Tasks - Invalid sortBy (400)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/tasks?sortBy=invalid",
+              "host": ["{{baseUrl}}"], "path": ["api", "tasks"],
+              "query": [{ "key": "sortBy", "value": "invalid" }]
+            }
+          },
+          "event": [{
+            "listen": "test",
+            "script": { "exec": ["pm.test('Status 400', () => pm.response.to.have.status(400));"] }
+          }]
+        },
+        {
+          "name": "Get Task Stats",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/tasks/stats", "host": ["{{baseUrl}}"], "path": ["api", "tasks", "stats"] }
+          },
+          "event": [{
+            "listen": "test",
+            "script": {
+              "exec": [
+                "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                "pm.test('Has total', () => pm.expect(pm.response.json().data).to.have.property('total'));",
+                "pm.test('Has byStatus', () => pm.expect(pm.response.json().data).to.have.property('byStatus'));"
+              ]
+            }
+          }]
+        },
+        {
+          "name": "Create Task (201)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Implement dark mode\",\n  \"description\": \"Add a dark theme toggle to the TaskFlow UI\",\n  \"status\": \"todo\",\n  \"priority\": \"medium\",\n  \"tags\": [\"frontend\", \"ui\", \"ux\"],\n  \"dueDate\": \"2026-03-15\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/tasks", "host": ["{{baseUrl}}"], "path": ["api", "tasks"] }
+          },
+          "event": [{
+            "listen": "test",
+            "script": {
+              "exec": [
+                "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                "pm.test('Task created', () => {",
+                "  const task = pm.response.json().data;",
+                "  pm.expect(task).to.have.property('id');",
+                "  pm.expect(task.title).to.equal('Implement dark mode');",
+                "  pm.collectionVariables.set('taskId', task.id);",
+                "});"
+              ]
+            }
+          }]
+        },
+        {
+          "name": "Create Task - Missing Title (400)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"description\": \"No title provided\",\n  \"status\": \"todo\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/tasks", "host": ["{{baseUrl}}"], "path": ["api", "tasks"] }
+          },
+          "event": [{
+            "listen": "test",
+            "script": {
+              "exec": [
+                "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                "pm.test('Error details present', () => pm.expect(pm.response.json().error.details).to.be.an('array'));"
+              ]
+            }
+          }]
+        },
+        {
+          "name": "Create Task - Invalid Status (400)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Bad Task\",\n  \"status\": \"flying\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/tasks", "host": ["{{baseUrl}}"], "path": ["api", "tasks"] }
+          },
+          "event": [{
+            "listen": "test",
+            "script": { "exec": ["pm.test('Status 400', () => pm.response.to.have.status(400));"] }
+          }]
+        },
+        {
+          "name": "Get Single Task",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/tasks/{{taskId}}", "host": ["{{baseUrl}}"], "path": ["api", "tasks", "{{taskId}}"] }
+          },
+          "event": [{
+            "listen": "test",
+            "script": {
+              "exec": [
+                "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                "pm.test('ID matches', () => pm.expect(pm.response.json().data.id).to.equal(pm.collectionVariables.get('taskId')));"
+              ]
+            }
+          }]
+        },
+        {
+          "name": "Get Task - Not Found (404)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/tasks/task_does_not_exist", "host": ["{{baseUrl}}"], "path": ["api", "tasks", "task_does_not_exist"] }
+          },
+          "event": [{
+            "listen": "test",
+            "script": { "exec": ["pm.test('Status 404', () => pm.response.to.have.status(404));"] }
+          }]
+        },
+        {
+          "name": "Partial Update Task (PATCH)",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"in-progress\",\n  \"priority\": \"high\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/tasks/{{taskId}}", "host": ["{{baseUrl}}"], "path": ["api", "tasks", "{{taskId}}"] }
+          },
+          "event": [{
+            "listen": "test",
+            "script": {
+              "exec": [
+                "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                "pm.test('Status updated', () => pm.expect(pm.response.json().data.status).to.equal('in-progress'));",
+                "pm.test('Priority updated', () => pm.expect(pm.response.json().data.priority).to.equal('high'));"
+              ]
+            }
+          }]
+        },
+        {
+          "name": "PATCH - Read-only field blocked (400)",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"id\": \"hacked_id\"\n}" },
+            "url": { "raw": "{{baseUrl}}/api/tasks/{{taskId}}", "host": ["{{baseUrl}}"], "path": ["api", "tasks", "{{taskId}}"] }
+          },
+          "event": [{
+            "listen": "test",
+            "script": { "exec": ["pm.test('Status 400', () => pm.response.to.have.status(400));"] }
+          }]
+        },
+        {
+          "name": "Full Replace Task (PUT)",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Dark Mode — Fully Replaced\",\n  \"description\": \"Full PUT replacement\",\n  \"status\": \"done\",\n  \"priority\": \"low\",\n  \"tags\": [\"completed\"]\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/tasks/{{taskId}}", "host": ["{{baseUrl}}"], "path": ["api", "tasks", "{{taskId}}"] }
+          },
+          "event": [{
+            "listen": "test",
+            "script": {
+              "exec": [
+                "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                "pm.test('Title replaced', () => pm.expect(pm.response.json().data.title).to.equal('Dark Mode — Fully Replaced'));"
+              ]
+            }
+          }]
+        },
+        {
+          "name": "Delete Task (204)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/tasks/{{taskId}}", "host": ["{{baseUrl}}"], "path": ["api", "tasks", "{{taskId}}"] }
+          },
+          "event": [{
+            "listen": "test",
+            "script": { "exec": ["pm.test('Status 204', () => pm.response.to.have.status(204));"] }
+          }]
+        },
+        {
+          "name": "Confirm Deleted - 404",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/tasks/{{taskId}}", "host": ["{{baseUrl}}"], "path": ["api", "tasks", "{{taskId}}"] }
+          },
+          "event": [{
+            "listen": "test",
+            "script": { "exec": ["pm.test('Status 404', () => pm.response.to.have.status(404));"] }
+          }]
+        }
+      ]
+    },
+    {
+      "name": "⚠️ Edge Cases",
+      "item": [
+        {
+          "name": "Unknown Endpoint (404)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/unknown", "host": ["{{baseUrl}}"], "path": ["api", "unknown"] }
+          },
+          "event": [{
+            "listen": "test",
+            "script": { "exec": ["pm.test('Status 404', () => pm.response.to.have.status(404));"] }
+          }]
+        },
+        {
+          "name": "Wrong Method on Collection (405)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/tasks", "host": ["{{baseUrl}}"], "path": ["api", "tasks"] }
+          },
+          "event": [{
+            "listen": "test",
+            "script": { "exec": ["pm.test('Status 405', () => pm.response.to.have.status(405));"] }
+          }]
+        }
+      ]
+    }
+  ]
+}

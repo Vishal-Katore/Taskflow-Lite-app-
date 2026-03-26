@@ -1,0 +1,20 @@
+{
+  "name": "taskflow-lite",
+  "version": "1.0.0",
+  "description": "taskflowliteapp",
+  "main": "server.js",
+  "scripts": {
+    "test": "node server.js",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Vishal-Katore/TaskFlow-Lite-App-.git"
+  },
+  "author": "vishal",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Vishal-Katore/TaskFlow-Lite-App-/issues"
+  },
+  "homepage": "https://github.com/Vishal-Katore/TaskFlow-Lite-App#readme"
+}
